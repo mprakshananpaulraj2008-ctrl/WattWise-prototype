@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WattWise – Smart Energy Waste Detector</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--navy:#0a1330;--navy2:#111d45;--navy3:#18265a;--green:#2dff8a;--white:#f5f8ff;--mute:#8d9bc4;--warn:#ffb020;--bad:#ff5d6c;--line:rgba(255,255,255,.09)}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--navy);color:var(--white);line-height:1.5}
+h1,h2,h3,.logo{font-family:'Sora',sans-serif}
+button{font:inherit;cursor:pointer;border:0;color:inherit}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.hidden{display:none!important}
+.btn{padding:12px 22px;border-radius:12px;font-weight:700;transition:.2s}
+.btn.pri{background:var(--green);color:var(--navy)}
+.btn.pri:hover{box-shadow:0 0 24px rgba(45,255,138,.45)}
+.btn.sec{background:transparent;border:1px solid var(--line);color:var(--white)}
+.btn.sec:hover{border-color:var(--green)}
+.logo{font-weight:800;font-size:22px;display:flex;align-items:center;gap:8px}
+.logo svg{width:26px;height:26px}
+/* landing */
+nav.top{display:flex;justify-content:space-between;align-items:center;padding:20px 5vw;position:sticky;top:0;background:rgba(10,19,48,.85);backdrop-filter:blur(10px);z-index:20;border-bottom:1px solid var(--line)}
+nav.top ul{display:flex;gap:28px;list-style:none}
+nav.top a{color:var(--mute);text-decoration:none;font-weight:500;cursor:pointer}
+nav.top a:hover{color:var(--green)}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;padding:8vh 5vw 10vh;min-height:80vh}
+.hero h1{font-size:clamp(36px,5.5vw,68px);line-height:1.05;font-weight:800;letter-spacing:-1.5px}
+.hero p{color:var(--mute);font-size:18px;max-width:520px;margin:22px 0 32px}
+.hero .cta{display:flex;gap:14px;flex-wrap:wrap}
+.meter{background:var(--navy2);border:1px solid var(--line);border-radius:28px;padding:26px;box-shadow:0 30px 80px rgba(0,0,0,.4)}
+.meter svg{width:100%;height:auto}
+.pulse{stroke-dasharray:600;stroke-dashoffset:600;animation:draw 3s ease forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.meter small{color:var(--mute);display:block;margin-top:10px;font-size:12px}
+section.pad{padding:70px 5vw}
+section.pad>h2{font-size:clamp(26px,3.5vw,40px);margin-bottom:10px}
+section.pad>p.lead{color:var(--mute);margin-bottom:34px;max-width:560px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px}
+.card{background:var(--navy2);border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.card h3{font-size:17px;margin-bottom:6px}
+.card p{color:var(--mute);font-size:14px}
+.ico{width:42px;height:42px;border-radius:12px;background:rgba(45,255,138,.12);display:grid;place-items:center;margin-bottom:14px;font-size:20px}
+footer{padding:30px 5vw;color:var(--mute);border-top:1px solid var(--line);font-size:14px}
+/* app */
+#app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+aside{background:var(--navy2);border-right:1px solid var(--line);padding:22px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px}
+aside .logo{margin:0 8px 22px}
+aside button{background:none;text-align:left;padding:12px 14px;border-radius:12px;color:var(--mute);font-weight:500;display:flex;gap:10px;align-items:center}
+aside button:hover{background:var(--navy3);color:var(--white)}
+aside button.on{background:rgba(45,255,138,.12);color:var(--green)}
+aside .back{margin-top:auto;border:1px solid var(--line)}
+main{padding:0 28px 50px;min-width:0}
+header.bar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:22px 0;position:sticky;top:0;background:var(--navy);z-index:10}
+header.bar h2{font-size:24px}
+.tools{display:flex;gap:12px;align-items:center}
+select,input[type=number]{background:var(--navy2);border:1px solid var(--line);color:var(--white);padding:10px 12px;border-radius:10px;font:inherit}
+.bell{position:relative;background:var(--navy2);border:1px solid var(--line);width:42px;height:42px;border-radius:12px}
+.bell i{position:absolute;top:8px;right:9px;width:9px;height:9px;border-radius:50%;background:var(--bad)}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--green);color:var(--navy);display:grid;place-items:center;font-weight:800}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px}
+.stat span{color:var(--mute);font-size:13px}
+.stat b{display:block;font-family:Sora;font-size:28px;margin:6px 0 2px}
+.stat em{font-style:normal;font-size:12px;color:var(--green)}
+.stat em.bad{color:var(--bad)}
+.two{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-bottom:18px}
+.chart{position:relative;height:300px}
+.seg{display:inline-flex;background:var(--navy);border-radius:10px;padding:3px;margin-bottom:12px}
+.seg button{background:none;padding:7px 16px;border-radius:8px;color:var(--mute);font-weight:600}
+.seg button.on{background:var(--green);color:var(--navy)}
+.tag{display:inline-block;font-size:11px;padding:3px 9px;border-radius:99px;font-weight:700;background:rgba(141,155,196,.18);color:var(--mute)}
+.tag.High{background:rgba(255,93,108,.18);color:var(--bad)}
+.tag.Medium{background:rgba(255,176,32,.18);color:var(--warn)}
+.tag.Low{background:rgba(45,255,138,.15);color:var(--green)}
+.rec,.find{display:flex;gap:14px;align-items:flex-start;padding:16px 0;border-bottom:1px solid var(--line)}
+.rec:last-child,.find:last-child{border:0}
+.rec.done{opacity:.45}
+.rec.done h3{text-decoration:line-through}
+.rec input{width:20px;height:20px;accent-color:#2dff8a;margin-top:3px}
+.rec h3,.find h3{font-size:15px;margin-bottom:3px}
+.rec p,.find p{font-size:13px;color:var(--mute)}
+.bar-row{margin:14px 0}
+.bar-row div.l{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px}
+.track{height:10px;background:var(--navy);border-radius:9px;overflow:hidden}
+.fill{height:100%;background:linear-gradient(90deg,#1fb865,var(--green));border-radius:9px;transition:width .6s}
+.note{font-size:12px;color:var(--warn);background:rgba(255,176,32,.1);padding:8px 12px;border-radius:10px;margin-bottom:14px;display:inline-block}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:12px 8px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--mute);font-weight:500}
+.set{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--line);gap:12px}
+.set:last-child{border:0}
+.set small{display:block;color:var(--mute)}
+.sw{appearance:none;width:46px;height:26px;border-radius:99px;background:var(--navy);border:1px solid var(--line);position:relative;cursor:pointer;transition:.2s;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--mute);transition:.2s}
+.sw:checked{background:var(--green)}
+.sw:checked::after{left:23px;background:var(--navy)}
+#toast{position:fixed;bottom:24px;right:24px;background:var(--green);color:var(--navy);padding:12px 20px;border-radius:12px;font-weight:700;transform:translateY(100px);transition:.3s;z-index:50}
+#toast.show{transform:none}
+.mbtn{display:none}
+@media(max-width:900px){
+ .hero,.two{grid-template-columns:1fr}
+ nav.top ul{display:none}
+ #app{grid-template-columns:1fr}
+ aside{position:fixed;left:0;top:0;width:240px;transform:translateX(-100%);transition:.25s;z-index:40}
+ aside.open{transform:none}
+ .mbtn{display:block;background:var(--navy2);border:1px solid var(--line);width:42px;height:42px;border-radius:12px}
+ main{padding:0 16px 40px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.pulse{stroke-dashoffset:0}}
+</style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div id="landing">
+ <nav class="top">
+  <div class="logo"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="#2dff8a"/></svg>WattWise</div>
+  <ul>
+   <li><a data-jump="landing-top">Home</a></li>
+   <li><a data-jump="features">Features</a></li>
+   <li><a onclick="openApp()">Dashboard</a></li>
+   <li><a data-jump="about">About</a></li>
+  </ul>
+  <button class="btn pri" onclick="openApp()">Open dashboard</button>
+ </nav>
+ <div class="hero" id="landing-top">
+  <div>
+   <h1>Smarter Energy. Sustainable Future.</h1>
+   <p>WattWise shows where your building wastes electricity, flags unusual usage, estimates your bill, and tells you what to switch off first.</p>
+   <div class="cta">
+    <button class="btn pri" onclick="openApp()">Explore Dashboard</button>
+    <button class="btn sec" data-jump="features">Learn More</button>
+   </div>
+  </div>
+  <div class="meter" aria-label="Sample night-time energy chart">
+   <svg viewBox="0 0 400 220">
+    <rect x="0" y="150" width="400" height="70" fill="rgba(255,93,108,.12)"/>
+    <text x="10" y="205" fill="#ff5d6c" font-size="11">Night-time waste zone (demo)</text>
+    <g stroke="rgba(255,255,255,.07)"><line x1="0" y1="50" x2="400" y2="50"/><line x1="0" y1="100" x2="400" y2="100"/><line x1="0" y1="150" x2="400" y2="150"/></g>
+    <path class="pulse" d="M0 170 L40 168 L80 160 L110 90 L150 60 L200 45 L250 60 L290 80 L320 130 L350 150 L400 148" fill="none" stroke="#2dff8a" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="350" cy="150" r="7" fill="#ff5d6c"/><text x="268" y="140" fill="#fff" font-size="12">AC left on: 38 kWh</text>
+   </svg>
+   <small>Illustration with demo data. No real meters are connected.</small>
+  </div>
+ </div>
+ <section class="pad" id="features">
+  <h2>What WattWise does</h2>
+  <p class="lead">Built for colleges, schools, offices and hostels.</p>
+  <div class="grid">
+   <div class="card"><div class="ico">📊</div><h3>Monitor usage</h3><p>Daily, weekly and monthly consumption with peak-hour detection.</p></div>
+   <div class="card"><div class="ico">🔎</div><h3>Find waste</h3><p>Spots high usage during non-working hours and in idle buildings.</p></div>
+   <div class="card"><div class="ico">₹</div><h3>Estimate cost</h3><p>Change the tariff and see the bill update instantly.</p></div>
+   <div class="card"><div class="ico">🌱</div><h3>Cut emissions</h3><p>Every kWh saved is shown as CO₂ avoided.</p></div>
+  </div>
+ </section>
+ <section class="pad" id="about">
+  <h2>About this prototype</h2>
+  <p class="lead">WattWise is a hackathon demo. All numbers and AI findings are simulated and are not real hardware measurements.</p>
+ </section>
+ <footer>© 2026 WattWise · Demo prototype</footer>
+</div>
+
+<!-- DASHBOARD -->
+<div id="app" class="hidden">
+ <aside id="side">
+  <div class="logo"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="#2dff8a"/></svg>WattWise</div>
+  <button data-v="overview" class="on">🏠 Overview</button>
+  <button data-v="monitoring">📈 Energy Monitoring</button>
+  <button data-v="analytics">🏢 Analytics</button>
+  <button data-v="ai">🤖 AI Recommendations</button>
+  <button data-v="reports">📄 Reports</button>
+  <button data-v="settings">⚙️ Settings</button>
+  <button class="back" onclick="closeApp()">← Back to site</button>
+ </aside>
+ <main>
+  <header class="bar">
+   <div style="display:flex;gap:12px;align-items:center"><button class="mbtn" onclick="document.getElementById('side').classList.toggle('open')" aria-label="Menu">☰</button><h2 id="title">Overview</h2></div>
+   <div class="tools">
+    <select id="bsel" aria-label="Building"><option>College</option><option>Office</option><option>Hostel</option></select>
+    <button class="bell" aria-label="Notifications" onclick="notify()">🔔<i id="dot"></i></button>
+    <div class="avatar">P</div>
+   </div>
+  </header>
+
+  <!-- overview -->
+  <div class="view" id="v-overview">
+   <div class="stats">
+    <div class="card stat"><span>Total energy (30 days)</span><b id="s-kwh">–</b><em id="s-kwh2"></em></div>
+    <div class="card stat"><span>Estimated bill</span><b id="s-bill">–</b><em id="s-bill2"></em></div>
+    <div class="card stat"><span>Energy saved</span><b id="s-save">–</b><em id="s-save2"></em></div>
+    <div class="card stat"><span>Carbon emissions</span><b id="s-co2">–</b><em id="s-co22"></em></div>
+   </div>
+   <div class="two">
+    <div class="card"><h3>Last 14 days</h3><div class="chart"><canvas id="c-ov"></canvas></div></div>
+    <div class="card"><h3>Where it goes</h3><div class="chart"><canvas id="c-split"></canvas></div></div>
+   </div>
+   <div class="card"><h3>Latest alerts</h3><div id="alerts"></div></div>
+  </div>
+
+  <!-- monitoring -->
+  <div class="view hidden" id="v-monitoring">
+   <div class="seg" id="range"><button data-r="daily" class="on">Daily</button><button data-r="weekly">Weekly</button><button data-r="monthly">Monthly</button></div>
+   <div class="two">
+    <div class="card"><h3 id="mt">Consumption</h3><div class="chart"><canvas id="c-mon"></canvas></div></div>
+    <div class="card"><h3>Peak consumption hours</h3><div class="chart"><canvas id="c-peak"></canvas></div></div>
+   </div>
+  </div>
+
+  <!-- analytics -->
+  <div class="view hidden" id="v-analytics">
+   <div class="two">
+    <div class="card"><h3>Building comparison (kWh, 30 days)</h3><div class="chart"><canvas id="c-cmp"></canvas></div></div>
+    <div class="card"><h3>Share of total</h3><div id="bars"></div></div>
+   </div>
+  </div>
+
+  <!-- ai -->
+  <div class="view hidden" id="v-ai">
+   <div class="card" style="margin-bottom:18px">
+    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+     <h3>AI Energy Analyzer</h3><button class="btn pri" id="analyze">Analyze Energy Usage</button>
+    </div>
+    <span class="note" style="margin-top:12px">Demo AI analysis from simulated data, not actual hardware measurements.</span>
+    <div id="findings"></div>
+   </div>
+   <div class="card"><h3>Recommendations</h3><p id="recsum" style="margin:4px 0 6px"></p><div id="recs"></div></div>
+  </div>
+
+  <!-- reports -->
+  <div class="view hidden" id="v-reports">
+   <div class="card" style="margin-bottom:18px">
+    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center"><h3>Monthly report</h3><button class="btn pri" id="dl">Download Report (CSV)</button></div>
+    <table id="rtable" style="margin-top:12px"></table>
+   </div>
+  </div>
+
+  <!-- settings -->
+  <div class="view hidden" id="v-settings">
+   <div class="card">
+    <div class="set"><div>Electricity tariff<small>₹ per kWh. Updates the bill everywhere.</small></div><input type="number" id="tariff" min="1" max="30" step="0.5" value="8"></div>
+    <div class="set"><div>Building<small>Choose which building to display.</small></div><select id="bsel2"><option>College</option><option>Office</option><option>Hostel</option></select></div>
+    <div class="set"><div>Alert notifications<small>Show a toast when waste is detected.</small></div><input type="checkbox" class="sw" id="n1" checked></div>
+    <div class="set"><div>Weekly summary<small>Include a weekly summary in reports.</small></div><input type="checkbox" class="sw" id="n2" checked></div>
+   </div>
+  </div>
+ </main>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+/* ===== DEMO DATA (edit freely) ===== */
+const BUILDINGS = {College:{f:1,area:'Academic Block'}, Office:{f:.55,area:'Main Office'}, Hostel:{f:.8,area:'Hostel Block'}};
+const BLOCKS = [{n:'Academic Block',kwh:5400},{n:'Computer Laboratory',kwh:4100},{n:'Library',kwh:2300},{n:'Hostel',kwh:4800}];
+const HOURLY = [20,18,17,17,18,24,40,70,105,120,125,118,110,115,122,118,100,80,62,52,44,36,28,22]; // kWh by hour (College)
+const SPLIT = {labels:['Air conditioning','Lighting','Computers','Other'], data:[38,22,27,13]};
+const CO2_PER_KWH = 0.82;
+const RECS = [
+ {id:1,t:'Reduce lighting in empty classrooms',p:'High',s:420,d:'Lights stay on in unused rooms after 4 PM. Add occupancy sensors.'},
+ {id:2,t:'Switch off equipment after working hours',p:'High',s:360,d:'Projectors and lab PCs draw standby power overnight.'},
+ {id:3,t:'Monitor air-conditioning consumption',p:'Medium',s:510,d:'Set AC to 24–26 °C and schedule automatic shut-off.'},
+ {id:4,t:'Replace old lighting with LED',p:'Medium',s:290,d:'LEDs use about half the power of tube lights.'},
+ {id:5,t:'Service pumps and fans on a schedule',p:'Low',s:140,d:'Worn motors waste energy. Check them every quarter.'}
+];
+const FINDINGS = [
+ {h:'Unusually high consumption',d:'Usage on {b} was {x}% above its 30-day average on Tuesday.',sev:'High'},
+ {h:'Non-working hours usage',d:'{x}% of consumption in {b} happened between 10 PM and 5 AM.',sev:'High'},
+ {h:'Possible wastage in {z}',d:'{z} drew {x} kWh while empty over the weekend.',sev:'Medium'},
+ {h:'AC running with doors open',d:'Cooling load in {z} stayed high with little temperature change.',sev:'Medium'},
+ {h:'Standby load detected',d:'A steady {x} kW base load stays on when {b} is closed.',sev:'Low'},
+ {h:'Peak demand spike',d:'A {x} kW spike at 2 PM suggests many devices starting together.',sev:'Medium'}
+];
+
+/* ===== STATE ===== */
+const S = {b:'College', tariff:8, range:'daily', done:new Set(), seed:7};
+let charts = {};
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+function rnd(i){ const x=Math.sin(i*12.9898+S.seed)*43758.5453; return x-Math.floor(x); }
+const f = () => BUILDINGS[S.b].f;
+const dailySeries = n => Array.from({length:n},(_,i)=>Math.round((310+rnd(i)*90+(i%7>4?-70:0))*f()));
+const weeklySeries = () => Array.from({length:8},(_,i)=>Math.round((2000+rnd(i+40)*400)*f()));
+const monthlySeries = () => Array.from({length:12},(_,i)=>Math.round((8500+rnd(i+80)*2500+Math.sin(i/1.9)*1200)*f()));
+const total = () => dailySeries(30).reduce((a,b)=>a+b,0);
+const saved = () => Math.round(310*f() + RECS.filter(r=>S.done.has(r.id)).reduce((a,r)=>a+r.s,0)*f());
+const money = n => '₹' + Math.round(n).toLocaleString('en-IN');
+const num = n => Math.round(n).toLocaleString('en-IN');
+function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove('show'),2600); }
+
+/* ===== NAVIGATION ===== */
+function openApp(){ $('#landing').classList.add('hidden'); $('#app').classList.remove('hidden'); scrollTo(0,0); show('overview'); }
+function closeApp(){ $('#app').classList.add('hidden'); $('#landing').classList.remove('hidden'); }
+function show(v){
+ $$('.view').forEach(e=>e.classList.add('hidden')); $('#v-'+v).classList.remove('hidden');
+ $$('aside [data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+ $('#title').textContent = $(`aside [data-v=${v}]`).textContent.replace(/^\S+\s/,'');
+ $('#side').classList.remove('open'); render();
+}
+$$('aside [data-v]').forEach(b=>b.onclick=()=>show(b.dataset.v));
+$$('[data-jump]').forEach(a=>a.onclick=()=>document.getElementById(a.dataset.jump).scrollIntoView());
+
+/* ===== CHARTS ===== */
+Chart.defaults.color='#8d9bc4'; Chart.defaults.font.family='DM Sans'; Chart.defaults.borderColor='rgba(255,255,255,.07)';
+function chart(id,cfg){ if(charts[id]) charts[id].destroy(); cfg.options=Object.assign({responsive:true,maintainAspectRatio:false},cfg.options||{}); charts[id]=new Chart($('#'+id),cfg); }
+const G='#2dff8a', B='#4f7cff';
+
+function render(){
+ const kwh=total(), sv=saved();
+ $('#s-kwh').textContent=num(kwh)+' kWh'; $('#s-kwh2').textContent='▲ 4.2% vs last month';
+ $('#s-bill').textContent=money(kwh*S.tariff); $('#s-bill2').textContent='at ₹'+S.tariff+' per kWh';
+ $('#s-save').textContent=num(sv)+' kWh'; $('#s-save2').textContent='≈ '+money(sv*S.tariff)+' saved';
+ $('#s-co2').textContent=num(kwh*CO2_PER_KWH)+' kg'; $('#s-co22').textContent='CO₂ · '+num(sv*CO2_PER_KWH)+' kg avoided';
+ $('#alerts').innerHTML=[['High','Night-time usage 32% above normal in '+BUILDINGS[S.b].area],['Medium','AC load peaked at 2:10 PM'],['Low','Standby load detected after 9 PM']]
+  .map(a=>`<div class="find"><span class="tag ${a[0]}">${a[0]}</span><p style="color:var(--white)">${a[1]}</p></div>`).join('');
+ // overview charts
+ const d14=dailySeries(14), lab=d14.map((_,i)=>'D'+(i+1));
+ chart('c-ov',{type:'line',data:{labels:lab,datasets:[{label:'kWh',data:d14,borderColor:G,backgroundColor:'rgba(45,255,138,.12)',fill:true,tension:.35,pointRadius:0}]},options:{plugins:{legend:{display:false}}}});
+ chart('c-split',{type:'doughnut',data:{labels:SPLIT.labels,datasets:[{data:SPLIT.data,backgroundColor:[G,B,'#ffb020','#8d9bc4'],borderWidth:0}]},options:{cutout:'66%',plugins:{legend:{position:'bottom'}}}});
+ renderMon(); renderCmp(); renderRecs(); renderReport();
+}
+function renderMon(){
+ const r=S.range; let labels,data,title;
+ if(r==='daily'){data=dailySeries(7);labels=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];title='Daily consumption (last 7 days, kWh)';}
+ else if(r==='weekly'){data=weeklySeries();labels=data.map((_,i)=>'Wk '+(i+1));title='Weekly usage (last 8 weeks, kWh)';}
+ else{data=monthlySeries();labels=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];title='Monthly trend (kWh)';}
+ $('#mt').textContent=title;
+ chart('c-mon',{type:r==='monthly'?'line':'bar',data:{labels,datasets:[{label:'kWh',data,backgroundColor:G,borderColor:G,borderRadius:8,tension:.35}]},options:{plugins:{legend:{display:false}}}});
+ const hr=HOURLY.map(v=>Math.round(v*f())), mx=Math.max(...hr);
+ chart('c-peak',{type:'bar',data:{labels:hr.map((_,i)=>i+':00'),datasets:[{data:hr,backgroundColor:hr.map(v=>v>mx*.85?'#ff5d6c':B),borderRadius:4}]},options:{plugins:{legend:{display:false}},scales:{x:{ticks:{maxTicksLimit:8}}}}});
+}
+function renderCmp(){
+ const b=BLOCKS.map(x=>({n:x.n,v:Math.round(x.kwh*(S.b==='Office'?.7:S.b==='Hostel'?.9:1))})), sum=b.reduce((a,x)=>a+x.v,0), mx=Math.max(...b.map(x=>x.v));
+ chart('c-cmp',{type:'bar',data:{labels:b.map(x=>x.n),datasets:[{data:b.map(x=>x.v),backgroundColor:[G,B,'#ffb020','#c77dff'],borderRadius:8}]},options:{indexAxis:'y',plugins:{legend:{display:false}}}});
+ $('#bars').innerHTML=b.map(x=>`<div class="bar-row"><div class="l"><span>${x.n}</span><span>${num(x.v)} kWh · ${Math.round(x.v/sum*100)}%</span></div><div class="track"><div class="fill" style="width:${x.v/mx*100}%"></div></div></div>`).join('');
+}
+
+/* ===== AI ===== */
+function analyze(){
+ const b=$('#analyze'); b.disabled=true; b.textContent='Analyzing…';
+ setTimeout(()=>{
+  S.seed=Math.floor(Math.random()*1000);
+  const pick=[...FINDINGS].sort(()=>Math.random()-.5).slice(0,3);
+  $('#findings').innerHTML=pick.map(p=>{
+   const z=BLOCKS[Math.floor(Math.random()*4)].n, x=Math.round(12+Math.random()*40), bl=BUILDINGS[S.b].area;
+   const fm=s=>s.replace(/{z}/g,z).replace(/{x}/g,x).replace(/{b}/g,bl);
+   return `<div class="find"><span class="tag ${p.sev}">${p.sev}</span><div><h3>${fm(p.h)}</h3><p>${fm(p.d)} <em>(demo analysis)</em></p></div></div>`;}).join('');
+  b.disabled=false; b.textContent='Analyze Energy Usage'; render();
+  if($('#n1').checked) toast('New analysis ready');
+ },900);
+}
+$('#analyze').onclick=analyze;
+function renderRecs(){
+ const pot=RECS.reduce((a,r)=>a+r.s,0), got=RECS.filter(r=>S.done.has(r.id)).reduce((a,r)=>a+r.s,0);
+ $('#recsum').textContent=`${S.done.size} of ${RECS.length} done · ${num(got*f())} of ${num(pot*f())} kWh/month potential captured`;
+ $('#recs').innerHTML=RECS.map(r=>`<label class="rec ${S.done.has(r.id)?'done':''}"><input type="checkbox" data-id="${r.id}" ${S.done.has(r.id)?'checked':''}><div><h3>${r.t} <span class="tag ${r.p}">${r.p}</span></h3><p>${r.d}</p><p style="color:var(--green)">Saves about ${num(r.s*f())} kWh/month</p></div></label>`).join('');
+ $$('#recs input').forEach(c=>c.onchange=()=>{const id=+c.dataset.id; c.checked?S.done.add(id):S.done.delete(id); if(c.checked)toast('Marked as completed'); render();});
+}
+
+/* ===== REPORT ===== */
+function reportRows(){
+ const kwh=total(), sv=saved();
+ return [['Building',S.b],['Period','Last 30 days'],['Total consumption (kWh)',kwh],['Tariff (INR per kWh)',S.tariff],['Estimated cost (INR)',Math.round(kwh*S.tariff)],['Energy saved (kWh)',sv],['Savings value (INR)',Math.round(sv*S.tariff)],['Carbon emissions (kg CO2)',Math.round(kwh*CO2_PER_KWH)],['Recommendations completed',S.done.size+' of '+RECS.length],['Data source','Simulated demo data']];
+}
+function renderReport(){ $('#rtable').innerHTML=reportRows().map(r=>`<tr><th>${r[0]}</th><td>${typeof r[1]==='number'?num(r[1]):r[1]}</td></tr>`).join(''); }
+$('#dl').onclick=()=>{
+ const csv='Metric,Value\n'+reportRows().map(r=>r.join(',')).join('\n');
+ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+ a.download='wattwise-report-'+S.b.toLowerCase()+'.csv'; a.click(); URL.revokeObjectURL(a.href); toast('Report downloaded');
+};
+
+/* ===== CONTROLS ===== */
+$$('#range button').forEach(b=>b.onclick=()=>{S.range=b.dataset.r;$$('#range button').forEach(x=>x.classList.toggle('on',x===b));renderMon();});
+function setBuilding(v){S.b=v;$('#bsel').value=v;$('#bsel2').value=v;render();toast('Showing '+v+' data');}
+$('#bsel').onchange=e=>setBuilding(e.target.value);
+$('#bsel2').onchange=e=>setBuilding(e.target.value);
+$('#tariff').oninput=e=>{const v=parseFloat(e.target.value); if(v>0){S.tariff=v;render();}};
+function notify(){ $('#dot').style.display='none'; toast('Night-time usage is high in '+BUILDINGS[S.b].area); }
+</script>
+</body>
+</html>
